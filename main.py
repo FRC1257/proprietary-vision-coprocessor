@@ -6,7 +6,7 @@ import json
 import numpy as np
 import time
 
-"""
+""" 
 basic structure
 src: https://docs.wpilib.org/en/stable/docs/software/vision-processing/wpilibpi/basic-vision-example.html
 """
