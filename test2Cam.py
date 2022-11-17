@@ -24,9 +24,12 @@ def main():
     img = np.zeros(shape=(1280, 1280, 3), dtype=np.uint8)
 
     while True:
+        start_time = time.time()
+        
         # Tell the CvSink to grab a frame from the camera and put it
         # in the source image.  If there is an error notify the output.
         time, img = cvSink.grabFrame(img)
+        output_img = np.copy(img)
 
         cv2.putText(img, "hello", (50, 50), cv2.FONT_HERSHEY_SIMPLEX,1, 2, cv2.LINE_AA)
         
@@ -40,7 +43,11 @@ def main():
         # Insert your image processing logic here!
         #
 
+        processing_time = time.time() - start_time
+        fps = 1 / processing_time
+        cv2.putText(output_img, str(round(fps, 1)), (0, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
+
         # (optional) send some image back to the dashboard
-        outputStream.putFrame(img)
+        outputStream.putFrame(output_img)
 
 main()
