@@ -33,7 +33,7 @@ def main():
     img = np.zeros(shape=(1280, 1280, 3), dtype=np.uint8)
 
     while True:
-        start_time = mytime.time()
+        start_time = time.time()
         
         # Tell the CvSink to grab a frame from the camera and put it
         # in the source image.  If there is an error notify the output.
