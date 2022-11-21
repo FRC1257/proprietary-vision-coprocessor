@@ -17,7 +17,7 @@ def main():
     # Get a CvSink. This will capture images from the camera
     cvSink = cs.getVideo()
 
-    # (optional) Setup a CvSource. This will send images back to the Dashboard
+    # (optional) Setup a CvSource. This will send images back to the Dashboard. 
     outputStream = cs.putVideo("My Camera", 1280, 1280)
 
     # Allocating new images is very expensive, always try to preallocate
@@ -42,9 +42,12 @@ def main():
         #
         # Insert your image processing logic here!
         #
+        # hsv_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2HSV)
+        # binary_img = cv2.inRange(hsv_img, (min_hue, min_sat, min_val), (max_hue, max_sat, max_val))
 
         processing_time = time.time() - start_time
         fps = 1 / processing_time
+        print(f"fps: {fps}")
         cv2.putText(output_img, str(round(fps, 1)), (0, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
 
         # (optional) send some image back to the dashboard
