@@ -6,6 +6,14 @@ from cscore import CameraServer
 import cv2
 import numpy as np
 
+# constants
+MIN_HUE = 60
+MIN_SAT = 70
+MIN_VAL = 70
+MAX_HUE = 85
+MAX_SAT = 255
+MAX_VAL = 255
+
 def main():
     cs = CameraServer.getInstance()
     cs.enableLogging()
@@ -42,8 +50,8 @@ def main():
         #
         # Insert your image processing logic here!
         #
-        hsv_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2HSV)
-        binary_img = cv2.inRange(hsv_img, (min_hue, min_sat, min_val), (max_hue, max_sat, max_val))
+        hsv_img = cv2.cvtColor(output_img, cv2.COLOR_BGR2HSV)
+        binary_img = cv2.inRange(hsv_img, (MIN_HUE, MIN_SAT, MIN_VAL), (MAX_HUE, MAX_SAT, MAX_SAT))
 
         processing_time = time.time() - start_time
         fps = 1 / processing_time
