@@ -5,6 +5,7 @@ from cscore import CameraServer
 # Import OpenCV and NumPy
 import cv2
 import numpy as np
+import time
 
 # constants
 MIN_HUE = 60
