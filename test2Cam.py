@@ -51,6 +51,21 @@ def main():
         # Insert your image processing logic here!
         #
         hsv_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2HSV)
+
+        _, contour_list, _ = cv2.findContours(output_img, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)
+
+        if len(contour_list) > 0:
+            largest = contour_list[0]
+            for contour in contour_list:
+                if cv2.contourArea(contour) > cv2.contourArea(largest):
+                    largest = contour
+
+        rect = cv2.minAreaRect(largest)
+        center, _, _ = rect
+        center_x, center_y = center
+
+        corners = cv2.convexHull(contour)
+        corners = cv2.approxPolyDP(corners, 0.1 * cv2.arcLength(contour), True)
         
         # binary_img = cv2.inRange(hsv_img, (MIN_HUE, MIN_SAT, MIN_VAL), (MAX_HUE, MAX_SAT, MAX_SAT))
         # just for testing, the binary_img will be outputted
