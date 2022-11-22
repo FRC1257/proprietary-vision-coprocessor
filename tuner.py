@@ -28,7 +28,7 @@ cv2.createTrackbar("U - V", "Trackbars", 255, 255, nothing)
 
 while True:
     # Start reading the webcam feed frame by frame.
-    frame = cv2.imread("original-image.webp")
+    frame = cv2.imread("test.jpg")
     
     # Convert the BGR image to HSV image.
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
