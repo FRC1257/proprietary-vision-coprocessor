@@ -27,7 +27,10 @@ cv2.createTrackbar("U - H", "Trackbars", 179, 179, nothing)
 cv2.createTrackbar("U - S", "Trackbars", 255, 255, nothing)
 cv2.createTrackbar("U - V", "Trackbars", 255, 255, nothing)
 # 200 is arbitrary max
-cv2.createTrackbar("Iterations", "Morpho", 1, 200, nothing)
+cv2.createTrackbar("Iter 1", "Morpho", 1, 200, nothing)
+cv2.createTrackbar("Iter 2", "Morpho", 1, 200, nothing)
+cv2.createTrackbar("Kernel-X", "Morpho", 1, 10, nothing)
+cv2.createTrackbar("Kernel-Y", "Morpho", 1, 10, nothing)
 
 while True:
     # Start reading the webcam feed frame by frame.
@@ -44,8 +47,10 @@ while True:
     u_h = cv2.getTrackbarPos("U - H", "Trackbars")
     u_s = cv2.getTrackbarPos("U - S", "Trackbars")
     u_v = cv2.getTrackbarPos("U - V", "Trackbars")
-    i = cv2.getTrackbarPos("Iterations", "Morpho")
-
+    i1 = cv2.getTrackbarPos("Iter 1", "Morpho")
+    i2 = cv2.getTrackbarPos("Iter 2", "Morpho")
+    x = cv2.getTrackbarPos("Kernel-X", "Morpho")
+    y = cv2.getTrackbarPos("Kernel-Y", "Morpho")
 
     # Set the lower and upper HSV range according to the value selected
     # by the trackbar
@@ -68,16 +73,18 @@ while True:
     # more info here: https://docs.opencv.org/4.x/d9/d61/tutorial_py_morphological_ops.html
     # and here: https://docs.wpilib.org/en/stable/docs/software/vision-processing/wpilibpi/morphological-operations.html
     # erode takes in the binary image which is called mask here
-    kernel = np.ones((3, 3), np.uint8)
-    eroded = cv2.erode(mask, kernel, iterations=i)
-    dilated = cv2.dilate(mask, kernel, iterations=i)
-    opened = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=i)
-    closed = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=i)
-
+    kernel = np.ones((x, y), np.uint8)
+    eroded = cv2.erode(mask, kernel, iterations=i1)
+    dilated = cv2.dilate(mask, kernel, iterations=i1)
+    opened = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=i1)
+    closed = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=i1)
+    erode_dilate = cv2.dilate(np.copy(eroded), kernel, iterations=i2)
+    dilate_erode = cv2.erode(np.copy(dilated), kernel, iterations=i2)
+    
     # stack the mask, orginal frame and the filtered result
     # mask_3 conflicts with erosion
     stacked = np.hstack((mask_3, frame, res))
-    morpho_stacked = np.hstack((eroded, dilated, opened, closed))
+    morpho_stacked = np.hstack((eroded, dilated, opened, closed, erode_dilate, dilate_erode))
 
     # Show this stacked frame at 40% of the size.
     cv2.imshow('Trackbars',cv2.resize(stacked,None,fx=0.4,fy=0.4))
@@ -90,7 +97,7 @@ while True:
     
     # If the user presses `s` then print this array.
     if key == ord('s'):
-        thearray = [[l_h,l_s,l_v],[u_h, u_s, u_v],[i]]
+        thearray = [[l_h,l_s,l_v],[u_h, u_s, u_v],[i1, i2, x, y]]
         print(thearray)
         
         # Also save this array as penval.npy
