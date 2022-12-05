@@ -10,6 +10,7 @@ with open('/boot/frc.json') as f:
     config = json.load(f)
 camSetting = config['cameras'][0]
 
+
 width = camSetting['width']
 height = camSetting['height']
 

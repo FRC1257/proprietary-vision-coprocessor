@@ -98,10 +98,11 @@ def main():
     width = camera["width"]
     height = camera["height"]
 
-    CameraServer.startAutomaticCapture()
+    cs = CameraServer.getInstance()
+    cs.startAutomaticCapture()
 
-    input_stream = CameraServer.getVideo()
-    output_stream = CameraServer.putVideo("Processed", width, height)
+    input_stream = cs.getVideo()
+    output_stream = cs.putVideo("Processed", width, height)
 
     # Table for vision output information
     try:

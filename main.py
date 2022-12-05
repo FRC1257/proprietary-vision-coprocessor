@@ -18,13 +18,17 @@ def main():
     width = camera['width']
     height = camera['height']
 
-    CameraServer.startAutomaticCapture()
+    cs = CameraServer.getInstance()
+    cs.enableLogging()
+    camera = cs.startAutomaticCapture()
+    camera.setResolution(width, height)
 
-    input_stream = CameraServer.getVideo()
-    output_stream = CameraServer.putVideo('Processed', width, height)
+    input_stream = cs.getVideo()
+    output_stream = cs.putVideo('Processed', width, height)
 
     # Table for vision output information
     vision_nt = NetworkTables.getTable('Vision')
+    vision_nt.putNumber("lower-hue", 23)
 
     # Allocating new images is very expensive, always try to preallocate
     img = np.zeros(shape=(240, 320, 3), dtype=np.uint8)
@@ -47,7 +51,7 @@ def main():
         hsv_img = cv2.cvtColor(input_img, cv2.COLOR_BGR2HSV)
         binary_img = cv2.inRange(hsv_img, (65, 65, 200), (85, 255, 255))
 
-        _, contour_list, _ = cv2.findContours(binary_img, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)
+        _, contour_list = cv2.findContours(binary_img, mode=cv2.RETR_EXTERNAL, method=cv2.CHAIN_APPROX_SIMPLE)
 
         x_list = []
         y_list = []
