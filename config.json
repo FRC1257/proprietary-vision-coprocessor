@@ -1,0 +1,53 @@
+{
+    "cameras": [
+      {
+        "brightness": 46,
+        "exposure": 4,
+        "fps": 30,
+        "height": 1280,
+        "name": "Tape Detection",
+        "path": "/dev/video0",
+        "pixel format": "mjpeg",
+        "properties": [
+          { "name": "connect_verbose", "value": 1 },
+          { "name": "contrast", "value": 50 },
+          { "name": "saturation", "value": 45 },
+          { "name": "power_line_frequency", "value": 1 },
+          { "name": "sharpness", "value": 22 },
+          { "name": "backlight_compensation", "value": 0 },
+          { "name": "pan_absolute", "value": 14400 },
+          { "name": "tilt_absolute", "value": -36000 },
+          { "name": "zoom_absolute", "value": 0 }
+        ],
+        "stream": { "properties": [] },
+        "white balance": "auto",
+        "width": 720
+      },
+      {
+        "brightness": 74,
+        "exposure": "auto",
+        "fps": 30,
+        "height": 1280,
+        "name": "Driver",
+        "path": "/dev/video2",
+        "pixel format": "mjpeg",
+        "properties": [
+          { "name": "connect_verbose", "value": 1 },
+          { "name": "contrast", "value": 50 },
+          { "name": "saturation", "value": 45 },
+          { "name": "power_line_frequency", "value": 1 },
+          { "name": "sharpness", "value": 22 },
+          { "name": "backlight_compensation", "value": 0 },
+          { "name": "pan_absolute", "value": 0 },
+          { "name": "tilt_absolute", "value": 0 },
+          { "name": "zoom_absolute", "value": 0 }
+        ],
+        "stream": { "properties": [] },
+        "white balance": "auto",
+        "width": 720
+      }
+    ],
+    "ntmode": "client",
+    "switched cameras": [],
+    "team": 1257
+  }

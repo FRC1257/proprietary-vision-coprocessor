@@ -7,6 +7,8 @@
 print("Start")
 print("Importing")
 import json, numpy as np, cv2
+import os
+import stat
 import time
 import sys
 
@@ -15,9 +17,14 @@ from networktables import NetworkTablesInstance
 
 print("Done")
 
-lower = np.array((60, 70, 70))
-upper = np.array((85, 255, 255))
-mode = 1
+lower = np.array((0, 0, 200))
+upper = np.array((255, 255, 255))
+mode = 0
+
+def changeMode():
+    global mode
+    print("changing mode")
+    mode = (mode + 1) % 2
 
 #   JSON format:
 #   {
@@ -100,39 +107,74 @@ def readCameraConfig(config):
     cameraConfigs.append(cam)
     return True
 
-""" def readSwitchedCameraConfig(config):
-    # Read single switched camera configuration.
-    cam = CameraConfig()
-
-    # name
-    try:
-        cam.name = config["name"]
-    except KeyError:
-        parseError("could not read switched camera name")
-        return False
-
-    # path
-    try:
-        cam.key = config["key"]
-    except KeyError:
-        parseError("switched camera '{}': could not read key".format(cam.name))
-        return False
-
-    switchedCameraConfigs.append(cam)
-    return True """
-
 def readConfig():
     """Read configuration file."""
     global team
     global server
 
+    data = {
+  "cameras": [
+    {
+      "brightness": 46,
+      "exposure": 4,
+      "fps": 30,
+      "height": 1280,
+      "name": "Tape Detection",
+      "path": "/dev/video0",
+      "pixel format": "mjpeg",
+      "properties": [
+        { "name": "connect_verbose", "value": 1 },
+        { "name": "contrast", "value": 50 },
+        { "name": "saturation", "value": 45 },
+        { "name": "power_line_frequency", "value": 1 },
+        { "name": "sharpness", "value": 22 },
+        { "name": "backlight_compensation", "value": 0 },
+        { "name": "pan_absolute", "value": 14400 },
+        { "name": "tilt_absolute", "value": -36000 },
+        { "name": "zoom_absolute", "value": 0 }
+      ],
+      "stream": { "properties": [] },
+      "white balance": "auto",
+      "width": 720
+    },
+    {
+      "brightness": 74,
+      "exposure": "auto",
+      "fps": 30,
+      "height": 1280,
+      "name": "Driver",
+      "path": "/dev/video2",
+      "pixel format": "mjpeg",
+      "properties": [
+        { "name": "connect_verbose", "value": 1 },
+        { "name": "contrast", "value": 50 },
+        { "name": "saturation", "value": 45 },
+        { "name": "power_line_frequency", "value": 1 },
+        { "name": "sharpness", "value": 22 },
+        { "name": "backlight_compensation", "value": 0 },
+        { "name": "pan_absolute", "value": 0 },
+        { "name": "tilt_absolute", "value": 0 },
+        { "name": "zoom_absolute", "value": 0 }
+      ],
+      "stream": { "properties": [] },
+      "white balance": "auto",
+      "width": 720
+    }
+  ],
+  "ntmode": "client",
+  "switched cameras": [],
+  "team": 1257
+}
+
+
     # parse file
     try:
         with open(configFile, "rt", encoding="utf-8") as f:
             j = json.load(f)
+            print("Config Json file", j)
     except OSError as err:
         print("could not open '{}': {}".format(configFile, err), file=sys.stderr)
-        return False
+        j = data
 
     # top level must be an object
     if not isinstance(j, dict):
@@ -164,7 +206,8 @@ def readConfig():
         return False
     for camera in cameras:
         if not readCameraConfig(camera):
-            return False
+            # return False
+            pass
 
     # switched cameras
     """ if "switched cameras" in j:
@@ -259,6 +302,7 @@ def startCamera(config):
     server = inst.startAutomaticCapture(camera=camera, return_server=True)
 
     camera.setConfigJson(json.dumps(config.config))
+    print("Current Configuration", json.dumps(config.config))
     camera.setConnectionStrategy(VideoSource.ConnectionStrategy.kKeepOpen)
 
     # input_stream = inst.getVideo()
@@ -272,38 +316,13 @@ def startCamera(config):
 
     return camera
 
-""" def startSwitchedCamera(config):
-    # Start running the switched camera.
-    print("Starting switched camera '{}' on {}".format(config.name, config.key))
-    server = CameraServer.getInstance().addSwitchedCamera(config.name)
-
-    def listener(fromobj, key, value, isNew):
-        if isinstance(value, float):
-            i = int(value)
-            if i >= 0 and i < len(cameras):
-              server.setSource(cameras[i])
-        elif isinstance(value, str):
-            for i in range(len(cameraConfigs)):
-                if value == cameraConfigs[i].name:
-                    server.setSource(cameras[i])
-                    break
-    
-    print(config.key)
-    NetworkTablesInstance.getDefault().getEntry(config.key).addListener(
-        listener,
-        NetworkTablesInstance.NotifyFlags.IMMEDIATE |
-        NetworkTablesInstance.NotifyFlags.NEW |
-        NetworkTablesInstance.NotifyFlags.UPDATE
-    )
-
-    return server """
-
 if __name__ == "__main__":
     if len(sys.argv) >= 2:
         configFile = sys.argv[1]
 
     # read configuration
     if not readConfig():
+        print("could not read cameras config: " + configFile)
         sys.exit(1)
 
     # start NetworkTables
@@ -317,13 +336,18 @@ if __name__ == "__main__":
         ntinst.startDSClient()
 
     # start cameras
+    print("Starting cameras")
     for config in cameraConfigs:
         cameras.append(startCamera(config))
 
     # start switched cameras
     """ for config in switchedCameraConfigs:
         startSwitchedCamera(config) """
+    print("Get specific camera")
     input_stream = output_streams[0].getVideo()
+    # drive_in_stream = output_streams[1].getVideo()
+
+    print("Starting NetworkTables listener")
     try:
         vision_nt = ntinst.getTable("Vision")
         vision_nt.addEntryListener(valueChanged)
@@ -331,22 +355,29 @@ if __name__ == "__main__":
         print("NetworkTables not initialized")
         print(e)
 
+    print("Starting output streams", len(output_streams))
     output_stream = output_streams[0].putVideo("Processed", 1280, 1280)
+    # drive_out_stream = output_streams[1].putVideo("Drive", 1280, 1280)
 
     # loop forever
     
     # loop to start
     # Allocating new images is very expensive, always try to preallocate
-    img = np.zeros(shape=(240, 320, 3), dtype=np.uint8)
+    print("Starting loop")
+    img = np.zeros(shape=(1280, 720, 3), dtype=np.uint8)
 
     # Wait for NetworkTables to start
     time.sleep(0.5)
+
+    t = 0
 
     while True:
         start_time = time.time()
 
         frame_time, input_img = input_stream.grabFrame(img)
+        # _, drive_in = drive_in_stream.grabFrame(img)
         output_img = np.copy(input_img)
+        # drive_img = np.copy(drive_in)
 
         # process the image
         height, width = img.shape[:2]
@@ -359,6 +390,9 @@ if __name__ == "__main__":
         # calculate the processing time and fps
         processing_time = time.time() - start_time
         fps = 1 / processing_time
+        if t % 50 == 0:
+            print("FPS", round(fps))
+            changeMode();
 
         # write it on the image
         cv2.putText(
@@ -369,5 +403,8 @@ if __name__ == "__main__":
             1,
             (255, 255, 255),
         )
+
         # display the image
         output_stream.putFrame(output_img)
+        # drive_out_stream.putFrame(drive_img)
+        t += 1
