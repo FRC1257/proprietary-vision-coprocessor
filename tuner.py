@@ -34,7 +34,7 @@ cv2.createTrackbar("Kernel-Y", "Morpho", 1, 10, nothing)
 
 while True:
     # Start reading the webcam feed frame by frame.
-    frame = cv2.imread("test.jpg")
+    frame = cv2.imread("horizontalTest.jpg")
     
     # Convert the BGR image to HSV image.
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -88,7 +88,7 @@ while True:
 
     # Show this stacked frame at 40% of the size.
     cv2.imshow('Trackbars',cv2.resize(stacked,None,fx=0.4,fy=0.4))
-    cv2.imshow('Morpho', cv2.resize(morpho_stacked, None, fx=0.4, fy=0.4))
+    cv2.imshow('Morpho', cv2.resize(morpho_stacked, None, fx=0.2, fy=0.2))
 
     # If the user presses ESC then exit the program
     key = cv2.waitKey(1)

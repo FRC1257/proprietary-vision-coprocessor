@@ -2,6 +2,7 @@
 # Import the camera server
 from cscore import CameraServer
 import cv2
+from networktables import NetworkTables
 import numpy as np
 import time
 
@@ -28,6 +29,16 @@ def main():
 
     # Setup a CvSource. This will send images back to the Dashboard. 
     outputStream = cs.putVideo("Processed", WIDTH, HEIGHT)
+
+    # Initialize network table
+    NetworkTables.initialize()
+    vision_nt = NetworkTables.getTable("Vision")
+    # Wait for init
+    time.sleep(0.5)
+    # Test code
+    vision_nt.putNumberArray("lower-h", [float(MIN_HUE)])
+    vision_nt.putNumberArray("lower-s", [float(MIN_SAT)])
+    vision_nt.putNumberArray("lower-v", [float(MIN_VAL)])
 
     # Allocating new images is very expensive, always try to preallocate
     img = np.zeros(shape=(WIDTH, HEIGHT, 3), dtype=np.uint8)
@@ -69,6 +80,7 @@ def main():
         processing_time = time.time() - start_time
         fps = 1 / processing_time
         print(f"fps: {fps}")
+        vision_nt.putNumberArray("tx", fps)
         cv2.putText(output_img, str(round(fps, 1)), (0, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
 
         # Sends processed image to separate output stream
