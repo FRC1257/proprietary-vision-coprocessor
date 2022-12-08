@@ -17,14 +17,13 @@ from networktables import NetworkTablesInstance
 
 print("Done")
 
+# Numbers to be changed by network table
 lower = np.array((0, 0, 200))
 upper = np.array((255, 255, 255))
 mode = 0
-
-def changeMode():
-    global mode
-    print("changing mode")
-    mode = (mode + 1) % 2
+kernelSize = 3
+iterations = 10
+minArea = 1000
 
 #   JSON format:
 #   {
@@ -224,15 +223,17 @@ def findContours(image, img_threshold, width, height):
     cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     largestContour = np.array([[]])
+    confidence = 0
+    area = 0
 
     # initialize an empty array of values to send back to the robot
-    llpython = [0,0,0,0,0,0,0,0]
 
     # if contours have been detected, draw them
     if len(contours) > 0:
         cv2.drawContours(image, contours, -1, 255, 2)
         # record the largest contour
         largestContour = max(contours, key=cv2.contourArea)
+        area = cv2.contourArea(largestContour)
 
         # get the unrotated bounding box that surrounds the contour
         x,y,w,h = cv2.boundingRect(largestContour)
@@ -250,14 +251,17 @@ def findContours(image, img_threshold, width, height):
         )
         x_list.append((center[0] - width / 2) / (width / 2))
         y_list.append(-(center[1] - height / 2) / (height / 2))
+    
+    if area > minArea:
+        confidence = 1
 
-    return largestContour, image, x_list, y_list
+    return largestContour, image, x_list, y_list, area, confidence
 
 
 # https://robotpy.readthedocs.io/projects/pynetworktables/en/stable/examples.html#pynetworktables-examples
 def valueChanged(table, key, value, isNew):
     print("valueChanged: key: '%s'; value: %s; isNew: %s" % (key, value, isNew))
-    global lower, upper
+    global lower, upper, iterations, minArea, kernelSize
     if key == "lower-h":
         lower[0] = value
     elif key == "lower-s":
@@ -270,29 +274,41 @@ def valueChanged(table, key, value, isNew):
         upper[1] = value
     elif key == "upper-v":
         upper[2] = value
+
+    if key == "iterations":
+        iterations = int(value)
+    
+    if key == "minArea":
+        minArea = int(value)
+    
+    if key == "kernel":
+        kernelSize = int(value)
     
     if key == "mode":
         global mode
         mode = int(value)
 
-# runPipeline() is called every frame by Limelight's backend.
+# runPipeline() is called every frame by camera's backend.
 def runPipeline(image, lower, upper, width, height):
     # convert the input image to the HSV color space
     img_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     # convert the hsv to a binary image by removing any pixels
     # that do not fall within the following HSV Min/Max values
-    img_threshold = cv2.inRange(img_hsv, lower, upper)
+    mask = cv2.inRange(img_hsv, lower, upper)
+    kernel = np.ones((kernelSize, kernelSize), np.uint8)
+    img_threshold = cv2.erode(mask, kernel, iterations=iterations)
 
+        
     # find contours in the new binary image
-    largestContour, image, x_list, y_list = findContours(image, img_threshold, width, height)
+    largestContour, image, x_list, y_list, area, confidence = findContours(image, img_threshold, width, height)
 
     #return the largest contour for the LL crosshair, the modified image, and custom robot data
     
     # change the image type
     # sometimes we want to see the part of the image that is being processed
     if mode == 1:
-        return largestContour, img_threshold, x_list, y_list
-    return largestContour, image, x_list, y_list
+        return largestContour, img_threshold, x_list, y_list, area, confidence
+    return largestContour, image, x_list, y_list, area, confidence
 
 def startCamera(config):
     """Start running the camera."""
@@ -381,18 +397,20 @@ if __name__ == "__main__":
 
         # process the image
         height, width = img.shape[:2]
-        largestContour, output_img, x_list, y_list = runPipeline(output_img, lower, upper, width, height)
+        largestContour, output_img, x_list, y_list, area, confidence = runPipeline(output_img, lower, upper, width, height)
 
         # send the data to the robot
-        vision_nt.putNumberArray("target_x", x_list)
-        vision_nt.putNumberArray("target_y", y_list)
+        vision_nt.putNumberArray("tx", x_list)
+        vision_nt.putNumberArray("ty", y_list)
+        vision_nt.putNumber("ta", area)
+        vision_nt.putNumber("tv", confidence)
 
         # calculate the processing time and fps
         processing_time = time.time() - start_time
         fps = 1 / processing_time
-        if t % 50 == 0:
+        """ if t % 50 == 0:
             print("FPS", round(fps))
-            changeMode();
+            changeMode(); """
 
         # write it on the image
         cv2.putText(
