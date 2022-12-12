@@ -50,7 +50,7 @@ while True:
 	# then we have reached the end of the video
 	if frame is None:
 		break
-
+		
 	# resize the frame, blur it, and convert it to the HSV
 	# color space
 	frame = imutils.resize(frame, width=600)
