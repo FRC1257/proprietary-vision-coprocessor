@@ -10,9 +10,11 @@ import json, numpy as np, cv2
 import time
 import sys
 
-from cscore import CameraServer, VideoSource, UsbCamera, MjpegServer
-from networktables import NetworkTablesInstance
-
+try:
+    from cscore import CameraServer, VideoSource, UsbCamera, MjpegServer
+    from networktables import NetworkTablesInstance
+except ModuleNotFoundError:
+    pass
 print("Done")
 
 # Numbers to be changed by network table
