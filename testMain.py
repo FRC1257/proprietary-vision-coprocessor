@@ -16,12 +16,16 @@ while video.isOpened():
         # that do not fall within the following HSV Min/Max values
         mask = cv2.inRange(img_hsv, lower, upper)
         new_image = cv2.bitwise_and(frame, frame, mask=mask)
-        edge = cv2.Canny(frame, 80, 100)
-        cv2.imshow("edge", edge)
         
-        circles = cv2.HoughCircles(edge,cv2.HOUGH_GRADIENT,2,100,
-                                    param1=35,param2=65,minRadius=10,maxRadius=200)
-        if not circles is None:
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        edge = cv2.Canny(gray, 80, 100, L2gradient=True)
+        cv2.imshow("edge", edge)
+
+        # closer to 1, the better circle it looks for
+        circles = cv2.HoughCircles(gray,cv2.HOUGH_GRADIENT_ALT,dp=1.5,minDist=20,
+                                    param1=300,param2=0.75,minRadius=50,maxRadius=300)
+        print(f"circle: {circles}")
+        if circles is not None:
             circles = np.uint16(np.around(circles))
             for i in circles[0,:]:
                 # draw the outer circle
